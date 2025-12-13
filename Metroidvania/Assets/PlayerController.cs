@@ -7,16 +7,18 @@ public class PlayerController : MonoBehaviour
     private float xAxis;
 
     [Header("Movimento")]
-    [SerializeField] private float walkSpeed = 5;
+    [SerializeField] private float walkSpeed = 20;
 
     [Header("Pulo & Double Jump")]
-    [SerializeField] private float jumpForce = 15;
+    [SerializeField] private float jumpForce = 32;
     [SerializeField] private float jumpCutMultiplier = 0.5f;
-    [SerializeField] private int maxJumps = 2; // 2 para Double Jump
+    [SerializeField] private int maxJumps = 2;
     private int remainingJumps; // Contador interno
 
     [Header("Checagem de Chão")]
-    [SerializeField] private Transform groundCheck;
+    [SerializeField] private Transform groundCheckA;
+
+    [SerializeField] private Transform groundCheckB;
     [SerializeField] private float groundCheckRadius = 0.2f;
     [SerializeField] private LayerMask groundLayer;
 
@@ -38,8 +40,9 @@ public class PlayerController : MonoBehaviour
 
     void CheckGround()
     {
-        // Evita o recarregamento enquanto pula
-        if (IsGrounded() && rb.linearVelocity.y <= 0.1f)
+        // Se está no chão E não está subindo muito rápido (ex: acabou de pular)
+        // Aumentei a tolerância de 0.1f para 3.0f para evitar o bug de travar
+        if (IsGrounded() && rb.linearVelocity.y < 3f) 
         {
             remainingJumps = maxJumps;
         }
@@ -71,7 +74,7 @@ public class PlayerController : MonoBehaviour
                 {
                     rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce*(float) 0.8);
                 }
-                remainingJumps--; // Gasta um pulo
+                remainingJumps--;
             }
         }
 
@@ -84,16 +87,21 @@ public class PlayerController : MonoBehaviour
 
     bool IsGrounded()
     {
-        // Desenha um ponto invisível. Se bater na Layer do Chão, retorna true.
-        return Physics2D.OverlapPoint(groundCheck.position, groundLayer);
+        // Desenha uma área. Se bater na Layer do Chão, retorna true.
+        return Physics2D.OverlapArea(groundCheckA.position, groundCheckB.position, groundLayer);
     }
 
     private void OnDrawGizmos()
     {
-        if (groundCheck != null)
+        if (groundCheckA != null)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+            Gizmos.DrawWireSphere(groundCheckA.position, groundCheckRadius);
+        }
+        if (groundCheckB != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(groundCheckB.position, groundCheckRadius);
         }
     }
 }
