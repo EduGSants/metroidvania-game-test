@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+    Animator animator;
     private Rigidbody2D rb;
     private float xAxis;
 
@@ -26,6 +27,8 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         remainingJumps = maxJumps;
+
+        animator = GetComponent<Animator>();
     }
 
     void Update()
@@ -58,6 +61,14 @@ public class PlayerController : MonoBehaviour
     void Move()
     {
         rb.linearVelocity = new Vector2(walkSpeed * xAxis, rb.linearVelocity.y);
+        animator.SetBool("Walking", rb.linearVelocityX != 0 && IsGrounded());
+        if(rb.linearVelocityX < 0 && rb.linearVelocityX != 0)
+        {
+            animator.SetInteger("X", -1);
+        } else if (rb.linearVelocityX > 0 && rb.linearVelocityX != 0)
+        {
+            animator.SetInteger("X", 1);
+        }
     }
 
     void JumpInput()
@@ -83,6 +94,8 @@ public class PlayerController : MonoBehaviour
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
         }
+
+        animator.SetBool("Jump", !IsGrounded());
     }
 
     bool IsGrounded()
