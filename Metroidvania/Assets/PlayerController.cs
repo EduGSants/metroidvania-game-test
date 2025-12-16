@@ -54,6 +54,19 @@ public class PlayerController : MonoBehaviour
         GetInputs();
         Move();
         JumpInput();
+        Flip();
+    }
+
+    void Flip()
+    {
+        if(xAxis < 0)
+        {
+            transform.localScale = new Vector3(1, 1, 1);
+        }
+        else if(xAxis > 0)
+        {
+            transform.localScale = new Vector3(-1, 1, 1);
+        }
     }
 
     void CheckGround()
@@ -77,13 +90,6 @@ public class PlayerController : MonoBehaviour
     {
         rb.linearVelocity = new Vector2(walkSpeed * xAxis, rb.linearVelocity.y);
         animator.SetBool("Walking", rb.linearVelocityX != 0 && IsGrounded());
-        if(rb.linearVelocityX < 0 && rb.linearVelocityX != 0)
-        {
-            animator.SetInteger("X", -1);
-        } else if (rb.linearVelocityX > 0 && rb.linearVelocityX != 0)
-        {
-            animator.SetInteger("X", 1);
-        }
     }
 
     void JumpInput()

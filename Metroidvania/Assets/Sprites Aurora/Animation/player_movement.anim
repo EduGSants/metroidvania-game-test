@@ -6,7 +6,7 @@ AnimationClip:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: player_movementL
+  m_Name: player_movement
   serializedVersion: 7
   m_Legacy: 0
   m_Compressed: 0
@@ -21,7 +21,7 @@ AnimationClip:
   - serializedVersion: 2
     curve:
     - time: 0
-      value: {fileID: 5792244999893032158, guid: 79d4004be677152438937754273a94b3, type: 3}
+      value: {fileID: 5088416854910217728, guid: 595e21cad651c104485a1bae5c08eee1, type: 3}
     - time: 0.083333336
       value: {fileID: 5088416854910217728, guid: 595e21cad651c104485a1bae5c08eee1, type: 3}
     - time: 0.16666667
@@ -52,7 +52,7 @@ AnimationClip:
       isIntCurve: 0
       isSerializeReferenceCurve: 0
     pptrCurveMapping:
-    - {fileID: 5792244999893032158, guid: 79d4004be677152438937754273a94b3, type: 3}
+    - {fileID: 5088416854910217728, guid: 595e21cad651c104485a1bae5c08eee1, type: 3}
     - {fileID: 5088416854910217728, guid: 595e21cad651c104485a1bae5c08eee1, type: 3}
     - {fileID: 700015595773176417, guid: a56529baa426e724799341b4f5d00ff3, type: 3}
     - {fileID: 700015595773176417, guid: a56529baa426e724799341b4f5d00ff3, type: 3}
