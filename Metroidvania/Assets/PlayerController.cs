@@ -23,6 +23,21 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float groundCheckRadius = 0.2f;
     [SerializeField] private LayerMask groundLayer;
 
+    public static PlayerController instance;
+
+    private void Awake()
+    {
+        // Singleton
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            instance = this;
+        }
+    }
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
