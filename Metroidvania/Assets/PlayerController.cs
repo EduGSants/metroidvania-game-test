@@ -36,9 +36,14 @@ public class PlayerController : MonoBehaviour
 
     private float lastXDirection = 1;
 
+    [Header("Attack")]
     bool attack = false;
-
+    bool canAttack = true;
     float timeBetweenAttack, timeSinceAttack;
+    [SerializeField] private float attackCooldown = 1f;
+    [SerializeField] Transform SideAttackTransform, UpAttackTransform, DownAttackTransform;
+    [SerializeField] Vector2 SideAttackArea, UpAttackArea, DownAttackArea;
+    [SerializeField] LayerMask attackableLayer;
 
     private void Awake()
     {
@@ -107,6 +112,25 @@ public class PlayerController : MonoBehaviour
         {
             timeSinceAttack = 0f;
             animator.SetTrigger("Attacking");
+            if(moveInput.y > 0)
+            {
+                Hit(UpAttackTransform, UpAttackArea);
+            }
+            else if(moveInput.y < 0)
+            {
+                Hit(DownAttackTransform, DownAttackArea);
+            }
+            else
+            {
+                Hit(SideAttackTransform, SideAttackArea);
+            }
+
+            while(0 < attackCooldown)
+            {
+                canAttack = false;
+                attackCooldown -= Time.deltaTime;
+            }
+            canAttack = true;
         }
     }
 
@@ -169,8 +193,19 @@ public class PlayerController : MonoBehaviour
         return Physics2D.OverlapArea(groundCheckA.position, groundCheckB.position, groundLayer);
     }
 
+    private void Hit(Transform _attackTransform, Vector2 _attackArea)
+    {
+        Collider2D[] hitEnemies = Physics2D.OverlapBoxAll(_attackTransform.position, _attackArea, 0, attackableLayer);
+        if(hitEnemies.Length > 0)
+            Debug.Log("Hit ");
+    }
+
     private void OnDrawGizmos()
     {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireCube(SideAttackTransform.position, SideAttackArea);
+        Gizmos.DrawWireCube(UpAttackTransform.position, UpAttackArea);
+        Gizmos.DrawWireCube(DownAttackTransform.position, DownAttackArea);
         if (groundCheckA != null)
         {
             Gizmos.color = Color.red;
@@ -221,7 +256,7 @@ public class PlayerController : MonoBehaviour
         while (timer < dashDuration)
         {
             timer += Time.deltaTime;
-
+            Attack(); // O dash realiza um dano ao ser executado
             yield return null; // Espera o próximo frame
         }
 
