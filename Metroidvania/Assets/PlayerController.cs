@@ -195,23 +195,22 @@ public class PlayerController : MonoBehaviour
         if(dashDir.y != 0)
         {
             animator.SetBool("DashUp", true);
+            if(dashDir.y < 0)
+            {
+                transform.localScale = new Vector3(originalScale.x, -originalScale.y, originalScale.z);
+            }
         }
         rb.linearVelocity = dashDir * dashSpeed;
-        // Animação do dash (escalar o personagem para dar efeito de "achatamento")
         float timer = 0f;
         while (timer < dashDuration)
         {
             timer += Time.deltaTime;
-            if(dashDir.y != 0)
-                transform.localScale = new Vector3(originalScale.x * 0.45f, originalScale.y, 1);
-            else
-                transform.localScale = new Vector3(originalScale.x * 5f, originalScale.y * 0.45f, 1);
 
             yield return null; // Espera o próximo frame
         }
 
         // Restaura tudo ao final
-        transform.localScale = originalScale; // Garante que voltou ao tamanho exato
+        transform.localScale = originalScale; // Garante que não alterou permanente o sprite
         rb.gravityScale = originalGravity;
         rb.linearVelocity = Vector2.zero;
         isDashing = false;
