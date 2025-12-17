@@ -36,6 +36,10 @@ public class PlayerController : MonoBehaviour
 
     private float lastXDirection = 1;
 
+    bool attack = false;
+
+    float timeBetweenAttack, timeSinceAttack;
+
     private void Awake()
     {
         // Singleton
@@ -68,6 +72,7 @@ public class PlayerController : MonoBehaviour
         JumpInput();
         DashInput();
         Flip();
+        Attack();
     }
 
 
@@ -95,6 +100,16 @@ public class PlayerController : MonoBehaviour
         
     }
 
+    void Attack()
+    {
+        timeSinceAttack += Time.deltaTime;
+        if(attack && timeSinceAttack >= timeBetweenAttack)
+        {
+            timeSinceAttack = 0f;
+            animator.SetTrigger("Attacking");
+        }
+    }
+
     void GetInputs()
     {
         moveInput = Vector2.zero;
@@ -102,6 +117,7 @@ public class PlayerController : MonoBehaviour
         if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveInput.x = 1;
         if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) moveInput.y = 1;
         if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) moveInput.y = -1;
+        attack = Input.GetMouseButton(0);
 
         // Atualiza a última direção horizontal para saber para onde dar dash se estiver parado
         if (moveInput.x != 0)
