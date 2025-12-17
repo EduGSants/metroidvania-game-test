@@ -658,10 +658,13 @@ MonoBehaviour:
   maxJumps: 2
   groundCheckA: {fileID: 966726121}
   groundCheckB: {fileID: 1187572940}
-  groundCheckRadius: 0.02
+  groundCheckRadius: 0.2
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
+  dashSpeed: 100
+  dashDuration: 0.15
+  dashCooldown: 1
 --- !u!95 &1571645214
 Animator:
   serializedVersion: 7
