@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
-
+using System.Collections.Generic;
 public class PlayerController : MonoBehaviour
 {
     private Vector2 moveInput;
@@ -10,44 +10,43 @@ public class PlayerController : MonoBehaviour
 
     [Header("Movimento")]
     [SerializeField] private float walkSpeed = 20;
+    private float lastXDirection = 1;
 
     [Header("Pulo & Double Jump")]
     [SerializeField] private float jumpForce = 32;
     [SerializeField] private float jumpCutMultiplier = 0.5f;
     [SerializeField] private int maxJumps = 2;
-    private int remainingJumps; // Contador interno
+    private int remainingJumps; 
 
     [Header("Checagem de Chão")]
     [SerializeField] private Transform groundCheckA;
-
     [SerializeField] private Transform groundCheckB;
     [SerializeField] private float groundCheckRadius = 0.2f;
     [SerializeField] private LayerMask groundLayer;
 
     [Header("Dash")]
-    // Dash variables can be added here
     [SerializeField] private float dashSpeed = 20f;
     [SerializeField] private float dashDuration = 0.2f;
     [SerializeField] private float dashCooldown = 1f;
+    [SerializeField] private Vector2 dashAttackSize = new Vector2(1f, 1f);
     private bool isDashing;
     private bool canDash = true;
+    
+    private List<Collider2D> enemiesHitByDash = new List<Collider2D>(); 
 
     public static PlayerController instance;
 
-    private float lastXDirection = 1;
+    [Header("Ataque (Espada)")]
+    bool attackInput = false;
+    [SerializeField] private float attackCooldown = 0.5f;
+    private float currentAttackTimer = 0f;
 
-    [Header("Attack")]
-    bool attack = false;
-    bool canAttack = true;
-    float timeBetweenAttack, timeSinceAttack;
-    [SerializeField] private float attackCooldown = 1f;
     [SerializeField] Transform SideAttackTransform, UpAttackTransform, DownAttackTransform;
     [SerializeField] Vector2 SideAttackArea, UpAttackArea, DownAttackArea;
     [SerializeField] LayerMask attackableLayer;
 
     private void Awake()
     {
-        // Singleton
         if (instance != null && instance != this)
         {
             Destroy(gameObject);
@@ -62,13 +61,18 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         remainingJumps = maxJumps;
-
         animator = GetComponent<Animator>();
     }
 
     void Update()
     {
+        if (currentAttackTimer > 0)
+        {
+            currentAttackTimer -= Time.deltaTime;
+        }
+
         if(isDashing) return;
+
         if (Keyboard.current == null) return;
 
         CheckGround();
@@ -77,61 +81,7 @@ public class PlayerController : MonoBehaviour
         JumpInput();
         DashInput();
         Flip();
-        Attack();
-    }
-
-
-    void Flip()
-    {
-        if(moveInput.x < 0)
-        {
-            transform.localScale = new Vector3(1, 1, 1);
-        }
-        else if(moveInput.x > 0)
-        {
-            transform.localScale = new Vector3(-1, 1, 1);
-        }
-    }
-
-    void CheckGround()
-    {
-        // Se está no chão E não está subindo muito rápido (ex: acabou de pular)
-        // Aumentei a tolerância de 0.1f para 3.0f para evitar o bug de travar
-        if (IsGrounded()) 
-        {
-            if(rb.linearVelocity.y < 3f) remainingJumps = maxJumps;
-            canDash = true;
-        }
-        
-    }
-
-    void Attack()
-    {
-        timeSinceAttack += Time.deltaTime;
-        if(attack && timeSinceAttack >= timeBetweenAttack)
-        {
-            timeSinceAttack = 0f;
-            animator.SetTrigger("Attacking");
-            if(moveInput.y > 0)
-            {
-                Hit(UpAttackTransform, UpAttackArea);
-            }
-            else if(moveInput.y < 0)
-            {
-                Hit(DownAttackTransform, DownAttackArea);
-            }
-            else
-            {
-                Hit(SideAttackTransform, SideAttackArea);
-            }
-
-            while(0 < attackCooldown)
-            {
-                canAttack = false;
-                attackCooldown -= Time.deltaTime;
-            }
-            canAttack = true;
-        }
+        HandleAttack();
     }
 
     void GetInputs()
@@ -141,9 +91,9 @@ public class PlayerController : MonoBehaviour
         if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveInput.x = 1;
         if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) moveInput.y = 1;
         if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) moveInput.y = -1;
-        attack = Input.GetMouseButton(0);
+        
+        attackInput = Input.GetMouseButton(0);
 
-        // Atualiza a última direção horizontal para saber para onde dar dash se estiver parado
         if (moveInput.x != 0)
         {
             lastXDirection = moveInput.x;
@@ -156,20 +106,26 @@ public class PlayerController : MonoBehaviour
         animator.SetBool("Walking", rb.linearVelocityX != 0 && IsGrounded());
     }
 
+    void Flip()
+    {
+        if(moveInput.x < 0)
+            transform.localScale = new Vector3(1, 1, 1);
+        else if(moveInput.x > 0)
+            transform.localScale = new Vector3(-1, 1, 1);
+    }
+
+
     void JumpInput()
     {
-        // Pulo
         if (Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             if (remainingJumps > 0 && IsGrounded())
             {
                 if(remainingJumps != 1)
-                {
                     rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-                } else
-                {
+                else
                     rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce * 0.8f);
-                }
+                
                 remainingJumps--;
             } else if (remainingJumps > 0 && !IsGrounded())
             {
@@ -178,7 +134,6 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // Corte do pulo
         if (Keyboard.current.spaceKey.wasReleasedThisFrame && rb.linearVelocity.y > 0)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
@@ -187,34 +142,48 @@ public class PlayerController : MonoBehaviour
         animator.SetBool("Jump", !IsGrounded());
     }
 
+    void CheckGround()
+    {
+        if (IsGrounded()) 
+        {
+            if(rb.linearVelocity.y < 3f) remainingJumps = maxJumps;
+            canDash = true;
+        }
+    }
+
     bool IsGrounded()
     {
-        // Desenha uma área. Se bater na Layer do Chão, retorna true.
         return Physics2D.OverlapArea(groundCheckA.position, groundCheckB.position, groundLayer);
+    }
+
+
+    void HandleAttack()
+    {
+        if(attackInput && currentAttackTimer <= 0)
+        {
+            PerformAttack();
+            currentAttackTimer = attackCooldown;
+        }
+    }
+
+    void PerformAttack()
+    {
+        animator.SetTrigger("Attacking");
+        
+        if(moveInput.y > 0)
+            Hit(UpAttackTransform, UpAttackArea);
+        else if(moveInput.y < 0)
+            Hit(DownAttackTransform, DownAttackArea);
+        else
+            Hit(SideAttackTransform, SideAttackArea);
     }
 
     private void Hit(Transform _attackTransform, Vector2 _attackArea)
     {
         Collider2D[] hitEnemies = Physics2D.OverlapBoxAll(_attackTransform.position, _attackArea, 0, attackableLayer);
-        if(hitEnemies.Length > 0)
-            Debug.Log("Hit ");
-    }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireCube(SideAttackTransform.position, SideAttackArea);
-        Gizmos.DrawWireCube(UpAttackTransform.position, UpAttackArea);
-        Gizmos.DrawWireCube(DownAttackTransform.position, DownAttackArea);
-        if (groundCheckA != null)
+        foreach(Collider2D enemy in hitEnemies)
         {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(groundCheckA.position, groundCheckRadius);
-        }
-        if (groundCheckB != null)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(groundCheckB.position, groundCheckRadius);
+            Debug.Log("Dano Normal (Espada) em: " + enemy.name);
         }
     }
 
@@ -232,41 +201,75 @@ public class PlayerController : MonoBehaviour
         isDashing = true;
         canDash = false;
         
-        // Guarda a gravidade e a escala original
+        enemiesHitByDash.Clear();
+
         float originalGravity = rb.gravityScale;
         Vector3 originalScale = transform.localScale; 
 
         rb.gravityScale = 0;
         rb.linearVelocity = Vector2.zero; 
 
-        // Define direção do Dash
         Vector2 dashDir;
         if (moveInput == Vector2.zero) dashDir = new Vector2(lastXDirection, 0);
         else dashDir = moveInput.normalized;
+
         if(dashDir.y != 0)
         {
             animator.SetBool("DashUp", true);
-            if(dashDir.y < 0)
-            {
-                transform.localScale = new Vector3(originalScale.x, -originalScale.y, originalScale.z);
-            }
+            if(dashDir.y < 0) transform.localScale = new Vector3(originalScale.x, -originalScale.y, originalScale.z);
         }
+        
         rb.linearVelocity = dashDir * dashSpeed;
+        
         float timer = 0f;
         while (timer < dashDuration)
         {
             timer += Time.deltaTime;
-            Attack(); // O dash realiza um dano ao ser executado
-            yield return null; // Espera o próximo frame
+            
+            CheckDashHit();
+            
+            yield return null; 
         }
 
-        // Restaura tudo ao final
-        transform.localScale = originalScale; // Garante que não alterou permanente o sprite
+        transform.localScale = originalScale;
         rb.gravityScale = originalGravity;
         rb.linearVelocity = Vector2.zero;
+        
         isDashing = false;
         animator.SetBool("Dash", false);
         animator.SetBool("DashUp", false);
+        
         yield return new WaitForSeconds(dashCooldown);
+        canDash = true;
+    }
+
+    private void CheckDashHit()
+    {
+        Collider2D[] hits = Physics2D.OverlapBoxAll(transform.position, dashAttackSize, 0, attackableLayer);
+
+        foreach (Collider2D enemy in hits)
+        {
+            if (!enemiesHitByDash.Contains(enemy))
+            {
+                enemiesHitByDash.Add(enemy);
+            }
+        }
+    }
+
+    // Puramente visual isso aqui
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        if(SideAttackTransform) Gizmos.DrawWireCube(SideAttackTransform.position, SideAttackArea);
+        if(UpAttackTransform) Gizmos.DrawWireCube(UpAttackTransform.position, UpAttackArea);
+        if(DownAttackTransform) Gizmos.DrawWireCube(DownAttackTransform.position, DownAttackArea);
+        
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireCube(transform.position, dashAttackSize);
+
+        Gizmos.color = Color.green;
+        if (groundCheckA != null) Gizmos.DrawWireSphere(groundCheckA.position, groundCheckRadius);
+        if (groundCheckB != null) Gizmos.DrawWireSphere(groundCheckB.position, groundCheckRadius);
     }
 }

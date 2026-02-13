@@ -730,7 +730,8 @@ MonoBehaviour:
   dashSpeed: 100
   dashDuration: 0.15
   dashCooldown: 1
-  attackCooldown: 1
+  dashAttackSize: {x: 1, y: 1}
+  attackCooldown: 0.3
   SideAttackTransform: {fileID: 683065054}
   UpAttackTransform: {fileID: 684377610}
   DownAttackTransform: {fileID: 1855359728}
