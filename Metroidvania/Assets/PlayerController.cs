@@ -44,6 +44,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] Transform SideAttackTransform, UpAttackTransform, DownAttackTransform;
     [SerializeField] Vector2 SideAttackArea, UpAttackArea, DownAttackArea;
     [SerializeField] LayerMask attackableLayer;
+    [SerializeField] float damage;
 
     private void Awake()
     {
@@ -183,7 +184,10 @@ public class PlayerController : MonoBehaviour
         Collider2D[] hitEnemies = Physics2D.OverlapBoxAll(_attackTransform.position, _attackArea, 0, attackableLayer);
         foreach(Collider2D enemy in hitEnemies)
         {
-            Debug.Log("Dano Normal (Espada) em: " + enemy.name);
+            if(enemy.GetComponent<Enemy>() != null)
+            {
+                enemy.GetComponent<Enemy>().EnemyHit(damage);
+            }
         }
     }
 
@@ -251,7 +255,8 @@ public class PlayerController : MonoBehaviour
         {
             if (!enemiesHitByDash.Contains(enemy))
             {
-                enemiesHitByDash.Add(enemy);
+               enemiesHitByDash.Add(enemy);
+               Debug.Log("Dano por dash!");
             }
         }
     }
