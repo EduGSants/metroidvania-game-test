@@ -1,3 +1,6 @@
 ﻿<Solution>
+  <Project Path="Unity.2D.Psdimporter.Editor.csproj" />
+  <Project Path="PsdPlugin.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Unity.2D.Psdimporter.EditorTests.csproj" />
 </Solution>
