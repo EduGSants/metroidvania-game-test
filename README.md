@@ -1,2 +1,3 @@
 # metroidvania-game-test
-A priori pretendo fazer isto apenas para testar a funcionalidade do github com a unity e aprender um pouco, porém pode ser que eu continue a usá-lo
+LINK DO GDD DO JOGO:
+https://docs.google.com/document/d/1g92L8Goasi5EBPgD2YblTHkA_8iYxO2k5GlzFXYqm5Q/edit?tab=t.0
