@@ -123,9 +123,9 @@ public class PlayerController : MonoBehaviour
     void Flip()
     {
         if(moveInput.x < 0)
-            transform.localScale = new Vector3(-1, 1, 1);
-        else if(moveInput.x > 0)
             transform.localScale = new Vector3(1, 1, 1);
+        else if(moveInput.x > 0)
+            transform.localScale = new Vector3(-1, 1, 1);
     }
 
     void SlashEffectAngle(GameObject _effect, int _direction, Transform _attackTransform)
@@ -139,6 +139,11 @@ public class PlayerController : MonoBehaviour
     void JumpInput()
     {
         animator.SetBool("Jump", !IsGrounded());
+        float timer = 0f;
+        while(timer < 0.2f)
+        {
+            timer += Time.deltaTime;
+        }
         if (Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             if (remainingJumps > 0 && IsGrounded())
@@ -173,7 +178,9 @@ public class PlayerController : MonoBehaviour
 
     bool IsGrounded()
     {
-        return Physics2D.OverlapArea(groundCheckA.position, groundCheckB.position, groundLayer);
+        bool groundA = Physics2D.OverlapCircle(groundCheckA.position, groundCheckRadius, groundLayer);
+        bool groundB = Physics2D.OverlapCircle(groundCheckB.position, groundCheckRadius, groundLayer);
+        return groundA || groundB;
     }
 
 
